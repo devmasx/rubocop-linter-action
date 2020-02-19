@@ -6,4 +6,4 @@ jobs:
     steps:
       - checkout
       - run: bundle install -j 4
-      - run: ruby lib/index
+      - run: ruby ./lib/index
