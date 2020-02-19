@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 class GithubCheckRunService
-  CHECK_NAME = 'Brakeman'
+  CHECK_NAME = 'Rubocop'
 
   def initialize(report, github_data, report_adapter)
     @report = report
     @github_data = github_data
     @report_adapter = report_adapter
-    @client = GithubClient.new(@github_data[:token], user_agent: 'brakeman-action')
+    @client = GithubClient.new(@github_data[:token], user_agent: 'rubocop-action')
   end
 
   def run
@@ -17,7 +17,7 @@ class GithubCheckRunService
     )['id']
     @summary = @report_adapter.summary(@report)
     @annotations = @report_adapter.annotations(@report)
-    @conclusion = @report_adapter.conslusion(@report)
+    @conclusion = @report_adapter.conclusion(@report)
 
     @client.patch(
       "#{endpoint_url}/#{id}",
@@ -31,27 +31,27 @@ class GithubCheckRunService
     "/repos/#{@github_data[:owner]}/#{@github_data[:repo]}/check-runs"
   end
 
-  def create_check_payload
+  def base_payload(status)
     {
       name: CHECK_NAME,
       head_sha: @github_data[:sha],
-      status: 'in_progress',
+      status: status,
       started_at: Time.now.iso8601
     }
   end
 
+  def create_check_payload
+    base_payload('in_progress')
+  end
+
   def update_check_payload
-    {
-      name: CHECK_NAME,
-      head_sha: @github_data[:sha],
-      status: 'completed',
-      completed_at: Time.now.iso8601,
+    base_payload('completed').merge!(
       conclusion: @conclusion,
       output: {
         title: CHECK_NAME,
         summary: @summary,
         annotations: @annotations
       }
-    }
+    )
   end
 end

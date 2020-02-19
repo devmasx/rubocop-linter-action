@@ -1,46 +1,60 @@
 # frozen_string_literal: true
 
-# https://developer.github.com/v3/checks/runs/#output-object
 class ReportAdapter
   class << self
     CONCLUSION_TYPES = { failure: 'failure', success: 'success' }.freeze
-    ANNOTATION_LEVEL = { notice: 'notice', warning: 'warning', failure: 'failure' }.freeze
+    ANNOTATION_LEVELS = {
+      'refactor' => 'notice',
+      'convention' => 'notice',
+      'warning' => 'warning',
+      'error' => 'failure',
+      'fatal' => 'failure'
+    }.freeze
 
-    def conslusion(report)
-      return CONCLUSION_TYPES[:failure] if security_warnings(report).positive?
+    def conclusion(report)
+      return CONCLUSION_TYPES[:failure] if total_offenses(report).positive?
 
       CONCLUSION_TYPES[:success]
     end
 
     def summary(report)
-      "**Brakeman Report**:\n#{security_warnings(report)} security warnings\n#{check_table(report)}"
+      "#{total_offenses(report)} offense(s) found"
     end
 
-    def annotations(report)
-      report['warnings'].map do |error|
-        {
-          'path' => error['file'],
-          'start_line' => error['line'],
-          'end_line' => error['line'],
-          'annotation_level' => ANNOTATION_LEVEL[:warning],
-          'title' => "#{error['confidence']} - #{error['check_name']}",
-          'message' => error['message']
-        }
+    def annotations(report) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+      annotation_list = []
+      count = 0
+      report['files'].each do |file|
+        file['offenses'].each do |offense|
+          count += 1
+          return annotation_list if count == 48
+
+          location = offense['location']
+          same_line = location['start_line'] == location['last_line']
+          annotation_list.push(
+            {
+              'path': file['path'],
+              'start_line': location['start_line'],
+              'end_line': location['last_line'],
+              'start_column': (location['start_column'] if same_line),
+              'end_column': (location['last_column'] if same_line),
+              'annotation_level': annotation_level(offense['severity']),
+              'message': "#{offense['message']} [#{offense['cop_name']}]"
+            }.compact.transform_keys!(&:to_s)
+          )
+        end
       end
+      annotation_list
     end
 
     private
 
-    def check_table(report)
-      uniq_checks(report).reduce('') { |memo, check| memo + "- [#{check[:check_name]}](#{check[:link]})\n" }
+    def annotation_level(severity)
+      ANNOTATION_LEVELS[severity]
     end
 
-    def uniq_checks(report)
-      report['warnings'].map { |w| { check_name: w['check_name'], link: w['link'] } }.uniq { |w| w[:check_name] }
-    end
-
-    def security_warnings(report)
-      report['scan_info']['security_warnings']
+    def total_offenses(report)
+      report.dig('summary', 'offense_count')
     end
   end
 end
