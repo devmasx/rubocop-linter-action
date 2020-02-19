@@ -22,7 +22,7 @@ end
   if ENV['REPORT_PATH']
     read_json(ENV['REPORT_PATH'])
   else
-    JSON.parse(`brakeman -f json`)
+    JSON.parse(`rubocop -f json`)
   end
 
 GithubCheckRunService.new(@report, @github_data, ReportAdapter).run
