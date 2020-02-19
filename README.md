@@ -51,4 +51,4 @@ jobs:
 ![example GitHub Action UI](./screenshots/action.png)
 ![example Pull request](./screenshots/pull_request.png)
 
-.
+..
