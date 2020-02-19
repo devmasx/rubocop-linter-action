@@ -11,19 +11,18 @@ def read_json(path)
   JSON.parse(File.read(path))
 end
 
-@event_json = read_json(ENV['GITHUB_EVENT_PATH']) if ENV['GITHUB_EVENT_PATH']
 @github_data = {
-  sha: ENV['GITHUB_SHA'],
+  sha: ENV['CIRCLE_SHA1'],
   token: ENV['GITHUB_TOKEN'],
-  owner: ENV['GITHUB_REPOSITORY_OWNER'] || @event_json.dig('repository', 'owner', 'login'),
-  repo: ENV['GITHUB_REPOSITORY_NAME'] || @event_json.dig('repository', 'name')
+  owner: ENV['CIRCLE_PROJECT_USERNAME'],
+  repo: ENV['CIRCLE_PROJECT_REPONAME']
 }
 
 @report =
   if ENV['REPORT_PATH']
     read_json(ENV['REPORT_PATH'])
   else
-    Dir.chdir(ENV['GITHUB_WORKSPACE']) { JSON.parse(`brakeman -f json`) }
+    Dir.chdir(ENV['CIRCLE_WORKING_DIRECTORY']) { JSON.parse(`brakeman -f json`) }
   end
 
 GithubCheckRunService.new(@report, @github_data, ReportAdapter).run
