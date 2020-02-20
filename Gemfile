@@ -2,8 +2,11 @@
 
 source 'https://rubygems.org'
 
+gem 'jwt'
+
 group :development do
   gem 'brakeman'
+  gem 'dotenv'
   gem 'rubocop'
 end
 
