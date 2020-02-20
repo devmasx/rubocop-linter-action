@@ -1,9 +1,16 @@
 require 'openssl'
 require 'jwt'
+require 'base64'
 
 module GithubApp
-  def self.jwt_token(pem_path: './github-app.pem', app_id: 44519)
-    private_pem = File.read(pem_path)
+  def self.github_token(private_pem:, app_id:, installation_id:)
+    fetch_token(
+      jwt: jwt_token(private_pem: private_pem, app_id: app_id),
+      installation_id: installation_id
+    )
+  end
+
+  def self.jwt_token(private_pem:, app_id:)
     private_key = OpenSSL::PKey::RSA.new(private_pem)
 
     payload = {
@@ -18,7 +25,7 @@ module GithubApp
     JWT.encode(payload, private_key, 'RS256')
   end
 
-  def self.get_token(jwt: jwt_token, installation_id: 6883212)
+  def self.fetch_token(jwt:, installation_id:)
     url = URI("https://api.github.com/app/installations/#{installation_id}/access_tokens")
 
     http = Net::HTTP.new(url.host, url.port)

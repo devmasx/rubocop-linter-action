@@ -8,7 +8,7 @@ require_relative "./github_check_run_service"
 require_relative "./github_client"
 require_relative "./github_app"
 
-module RobocopLinterApp
+module RubocopLinterApp
   def self.run(github_data: nil, report_path: nil)
     report =
       if report_path
