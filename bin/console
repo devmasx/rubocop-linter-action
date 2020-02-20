@@ -4,4 +4,6 @@
 require 'dotenv/load'
 require 'pry'
 
-require_relative '../lib/index'
+require_relative '../lib/robocop_linter_app'
+
+Pry.start
