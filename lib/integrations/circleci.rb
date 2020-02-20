@@ -4,7 +4,7 @@ require 'base64'
 require 'dotenv/load'
 require_relative '../rubocop_linter_app'
 
-token = GithubApp.github_token(
+token = GithubCheckRunAuth.github_token(
   private_pem: Base64.decode64(ENV['PEM_KEY']),
   app_id: ENV['GITHUB_APP_ID'],
   installation_id: ENV['GITHUB_APP_INSTALLATION_ID']
