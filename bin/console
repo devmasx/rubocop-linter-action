@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'dotenv/load'
+require 'pry'
+
+require_relative '../lib/robocop_linter_app'
+
+Pry.start
